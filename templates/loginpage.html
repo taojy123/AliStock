@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+    <h2 class="sub-header">Login</h2>
+
+
+
+    <form action="/login/" method="POST" style="width:300px">
+
+      <div class="form-group">
+        <label>username</label>
+        <input type="text" class="form-control" name="username" >
+      </div>
+      <div class="form-group">
+        <label>password</label>
+        <input type="password" class="form-control" name="password" >
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100px">Login</button>
+
+    </form>
+
+
+    <script>
+        $("#loginpage").addClass('active')
+    </script>
+
+{% endblock %}
+

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>MiniERP</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+
+
+<!-- Main jumbotron for a primary marketing message or call to action -->
+<div class="jumbotron" style="background: #2dc2ee">
+    <div class="container">
+        <h1>Hello! Welcome to MiniERP</h1>
+        <p>
+            In this system, you can add, delete and edit merchandise, customers, suppliers, information and data.
+            And can record of procurement and sales.
+            Of course, you can also take inventory, and export data for recording inventory and procurement of goods sold to a file.
+        </p>
+        {% if not request.user.is_authenticated %}
+            <p>
+                <a class="btn btn-primary btn-lg" href="/loginpage/" role="button">Login</a>
+{#                <a class="btn btn-primary btn-lg" href="/registerpage/" role="button">Register</a>#}
+            </p>
+        {% else %}
+            <p>Select the operation you need...</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <h2>Product</h2>
+            <p>add, delete and edit products information</p>
+            <p><a class="btn btn-default" href="/product/list" role="button">Product &raquo;</a></p>
+        </div>
+        <div class="col-md-4">
+            <h2>Customer</h2>
+            <p>add, delete and edit customers information</p>
+            <p><a class="btn btn-default" href="/customer/list" role="button">Customer &raquo;</a></p>
+        </div>
+        <div class="col-md-4">
+            <h2>Supplier</h2>
+            <p>add, delete and edit suppliers information</p>
+            <p><a class="btn btn-default" href="/supplier/list" role="button">Supplier &raquo;</a></p>
+        </div>
+        <div class="col-md-4">
+            <h2>Purchase</h2>
+            <p>add purchasing records</p>
+            <p><a class="btn btn-default" href="/supplier/list" role="button">Purchase &raquo;</a></p>
+        </div>
+        <div class="col-md-4">
+            <h2>Sale</h2>
+            <p>add sales records</p>
+            <p><a class="btn btn-default" href="/sale/list" role="button">Sale &raquo;</a></p>
+        </div>
+        <div class="col-md-4">
+            <h2>Stock</h2>
+            <p>view and export stocks data</p>
+            <p><a class="btn btn-default" href="/stock/list" role="button">Stock &raquo;</a></p>
+        </div>
+        {% if request.user.is_staff %}
+            <div class="col-md-4">
+                <h2>User Management</h2>
+                <p>view and update users data</p>
+                <p><a class="btn btn-default" href="/user/list" role="button">User Management &raquo;</a></p>
+            </div>
+        {% endif %}
+        {% if request.user.is_authenticated %}
+            <div class="col-md-4">
+                <h2>Reset Password</h2>
+                <p>you can change your password</p>
+                <p><a class="btn btn-default" href="/password" role="button">Reset Password &raquo;</a></p>
+            </div>
+        {% endif %}
+    </div>
+
+    <hr>
+
+    <footer>
+        <p>&copy; MiniERP 2015</p>
+    </footer>
+</div> <!-- /container -->
+
+
+
+</body>
+</html>

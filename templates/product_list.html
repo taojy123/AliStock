@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2 class="sub-header">产品管理</h2>
+
+    <table id="table">
+        <thead>
+            <tr>
+                <th data-sortable="true">产品编号</th>
+                <th data-sortable="true">名称</th>
+                <th data-sortable="true">颜色</th>
+                <th data-sortable="true">尺寸</th>
+                <th data-sortable="true">款式</th>
+                <th data-sortable="true">网页地址</th>
+                <th data-sortable="true">单价</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in products %}
+                <tr >
+                    <td>{{ r.pid }}</td>
+                    <td>{{ r.name }}</td>
+                    <td>{{ r.color }}</td>
+                    <td>{{ r.size }}</td>
+                    <td>{{ r.pattern }}</td>
+                    <td>{{ r.url }}</td>
+                    <td>{{ r.price }}</td>
+                    <td>
+                        <a class="btn btn-xs btn-danger" href="/product/del/{{ r.id }}/" onclick="return confirm('确定要删除吗?')">删除</a>
+                        <a class="btn btn-xs btn-primary modify_btn"
+                           data-id="{{ r.id }}"
+                           data-pid="{{ r.pid }}"
+                           data-name="{{ r.name }}"
+                           data-color="{{ r.color }}"
+                           data-size="{{ r.size }}"
+                           data-pattern="{{ r.pattern }}"
+                           data-url="{{ r.url }}"
+                           data-price="{{ r.price }}"
+                           href="#modify" >修改</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+    <div id="modify" style="margin-top: 10px; display: none">
+        <form action="/product/update/" method="POST" class="form-horizontal">
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >产品编号:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="pid" >
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >名称:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="name" >
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >颜色:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="color" >
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >尺寸:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="size" >
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >款式:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="pattern" >
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >网页地址:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="url" >
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >单价:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="price" value="0">
+            </div>
+
+            <input type="hidden" name="id">
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" ></label>
+                <button type="submit" class="btn btn-success" >Update</button>
+            </div>
+        </form>
+    </div>
+
+
+    <div id="add" style="margin-top: 50px">
+        <label  class="col-sm-2 control-label" ></label>
+        <button id="add_btn" class="btn btn-warning">添加新记录</button>
+
+        <form id="form" action="/product/add/" method="POST" class="form-horizontal" style="margin-top: 30px;display: none">
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >产品编号:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="pid" >
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >名称:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="name" >
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >颜色:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="color" >
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >尺寸:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="size" >
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >款式:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="pattern" >
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >网页地址:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="url" >
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >单价:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="price" value="0">
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" ></label>
+                <button type="submit" class="btn btn-success" >Submit</button>
+            </div>
+        </form>
+
+    </div>
+
+
+
+{% endblock %}
+
+
+{% block script %}
+    <script>
+        $('#table').bootstrapTable();
+
+        $("#product_list").addClass('active');
+
+        $("#add_btn").click(function(){
+            $("#form").fadeToggle();
+        });
+
+        $(".modify_btn").click(function(){
+            $("#modify").fadeIn()
+            $("#modify [name='id']").val($(this).attr("data-id"));
+            $("#modify [name='pid']").val($(this).attr("data-pid"));
+            $("#modify [name='name']").val($(this).attr("data-name"));
+            $("#modify [name='color']").val($(this).attr("data-color"));
+            $("#modify [name='size']").val($(this).attr("data-size"));
+            $("#modify [name='pattern']").val($(this).attr("data-pattern"));
+            $("#modify [name='url']").val($(this).attr("data-url"));
+            $("#modify [name='price']").val($(this).attr("data-price"));
+        });
+
+    </script>
+{% endblock %}
