@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-    <title>MiniERP</title>
+    <title>AliStock</title>
 
     <link href="/static/css/bootstrap.css" rel="stylesheet">
     <link href="/static/css/bootstrap-table.css" rel="stylesheet"/>
@@ -26,7 +26,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="/">MiniERP</a>
+            <a class="navbar-brand" href="/">阿里库存助手</a>
         </div>
         <div class="navbar-collapse collapse">
         </div>
@@ -39,15 +39,12 @@
         <div class="col-sm-3 col-md-2 sidebar" style="display:block;">
             <ul class="nav nav-sidebar">
 
-                <li id="product_list"><a href="/product/list/">Product</a></li>
-                <li id="customer_list"><a href="/customer/list/">Customer</a></li>
-                <li id="supplier_list"><a href="/supplier/list/">Supplier</a></li>
-                <li id="purchase_list"><a href="/purchase/list/">Purchase</a></li>
-                <li id="sale_list"><a href="/sale/list/">Sale</a></li>
-                <li id="stock"><a href="/stock/list/">Stock</a></li>
+                <li id="product_list"><a href="/product/list/">产品</a></li>
+                <li id="purchase_list"><a href="/purchase/list/">进货</a></li>
+                <li id="sale_list"><a href="/sale/list/">出货</a></li>
 
                 {% if request.user.is_staff %}
-                    <li id="user_list"><a href="/user/list">User Management</a></li>
+                    <li id="user_list"><a href="/user/list">用户管理</a></li>
                 {% endif %}
 
                 {% if request.user.is_authenticated %}

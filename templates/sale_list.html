@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2 class="sub-header">出货管理</h2>
+
+    <table id="table">
+        <thead>
+            <tr>
+                <th data-sortable="true">产品</th>
+                <th data-sortable="true">数量</th>
+                <th data-sortable="true">总价</th>
+                <th data-sortable="true">说明</th>
+                <th data-sortable="true">时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in sales %}
+                <tr >
+                    <td>{{ r.product }}</td>
+                    <td>{{ r.quantity }}</td>
+                    <td>{{ r.price }}</td>
+                    <td>{{ r.comment }}</td>
+                    <td>{{ r.create_time|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <a class="btn btn-xs btn-danger" href="/sale/del/{{ r.id }}/" onclick="return confirm('确定要删除吗?')">删除</a>
+                        <a class="btn btn-xs btn-primary modify_btn"
+                           data-id="{{ r.id }}"
+                           data-product_id="{{ r.product_id }}"
+                           data-quantity="{{ r.quantity }}"
+                           data-price="{{ r.price }}"
+                           data-comment="{{ r.comment }}"
+                           href="#modify" >修改</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+    <div id="modify" style="margin-top: 10px; display: none">
+        <form action="/sale/update/" method="POST" class="form-horizontal">
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >产品:</label>
+                <select class="form-control"  style="display:inline;width:auto;" name="product_id" >
+                    {% for product in products %}
+                        <option value="{{ product.id }}">{{ product }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >数量:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="quantity" >
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >总价:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="price" >
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >说明:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="comment" >
+            </div>
+
+            <input type="hidden" name="id">
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" ></label>
+                <button type="submit" class="btn btn-success" >更新</button>
+            </div>
+        </form>
+    </div>
+
+
+    <div id="add" style="margin-top: 50px">
+        <label  class="col-sm-2 control-label" ></label>
+        <button id="add_btn" class="btn btn-warning">添加新记录</button>
+
+        <form id="form" action="/sale/add/" method="POST" class="form-horizontal" style="margin-top: 30px;display: none">
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >产品:</label>
+                <select class="form-control"  style="display:inline;width:auto;" name="product_id" >
+                    {% for product in products %}
+                        <option value="{{ product.id }}">{{ product }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >数量:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="quantity" >
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >总价:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="price" >
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >说明:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="comment" >
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" ></label>
+                <button type="submit" class="btn btn-success" >提交</button>
+            </div>
+        </form>
+
+    </div>
+
+
+
+{% endblock %}
+
+
+{% block script %}
+    <script>
+        $('#table').bootstrapTable();
+
+        $("#sale_list").addClass('active');
+
+        $("#add_btn").click(function(){
+            $("#form").fadeToggle();
+        });
+
+        $(".modify_btn").click(function(){
+            $("#modify").fadeIn()
+            $("#modify [name='id']").val($(this).attr("data-id"));
+            $("#modify [name='product_id']").val($(this).attr("data-product_id"));
+            $("#modify [name='quantity']").val($(this).attr("data-quantity"));
+            $("#modify [name='price']").val($(this).attr("data-price"));
+            $("#modify [name='comment']").val($(this).attr("data-comment"));
+        });
+
+    </script>
+{% endblock %}

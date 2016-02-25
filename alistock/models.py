@@ -16,6 +16,9 @@ class Product(models.Model):
     update_time = models.DateTimeField(auto_now=True)
     extra = models.TextField(blank=True, null=True)
 
+    def __unicode__(self):
+        return u'%s %s %s %s' % (self.name, self.color, self.size, self.pattern)
+
 
 class Purchase(models.Model):
     product = models.ForeignKey(Product)

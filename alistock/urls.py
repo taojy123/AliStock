@@ -13,6 +13,16 @@ urlpatterns = patterns('',
     ('^product/del/(\w+)/$', product_del),
     ('^product/update/$', product_update),
 
+    ('^purchase/list/$', purchase_list),
+    ('^purchase/add/$', purchase_add),
+    ('^purchase/del/(\w+)/$', purchase_del),
+    ('^purchase/update/$', purchase_update),
+
+    ('^sale/list/$', sale_list),
+    ('^sale/add/$', sale_add),
+    ('^sale/del/(\w+)/$', sale_del),
+    ('^sale/update/$', sale_update),
+
     ('^loginpage/$', loginpage),
     ('^login/$', login),
     ('^logout/$', logout),

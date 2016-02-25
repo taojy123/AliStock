@@ -13,6 +13,8 @@
                 <th data-sortable="true">款式</th>
                 <th data-sortable="true">网页地址</th>
                 <th data-sortable="true">单价</th>
+                <th data-sortable="true">最后更新时间</th>
+                <th data-sortable="true">当前库存</th>
                 <th>操作</th>
             </tr>
         </thead>
@@ -26,6 +28,10 @@
                     <td>{{ r.pattern }}</td>
                     <td>{{ r.url }}</td>
                     <td>{{ r.price }}</td>
+                    <td>{{ r.update_time|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <span {% if r.stock < 20 %}style="color: red"{% endif %}>{{ r.stock }}</span>
+                    </td>
                     <td>
                         <a class="btn btn-xs btn-danger" href="/product/del/{{ r.id }}/" onclick="return confirm('确定要删除吗?')">删除</a>
                         <a class="btn btn-xs btn-primary modify_btn"
@@ -80,14 +86,14 @@
 
             <div class="form-group">
                 <label  class="col-sm-2 control-label" >单价:</label>
-                <input type="text" class="form-control"  style="display:inline;width:auto;" name="price" value="0">
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="price" >
             </div>
 
             <input type="hidden" name="id">
 
             <div class="form-group">
                 <label  class="col-sm-2 control-label" ></label>
-                <button type="submit" class="btn btn-success" >Update</button>
+                <button type="submit" class="btn btn-success" >更新</button>
             </div>
         </form>
     </div>
@@ -131,12 +137,12 @@
 
             <div class="form-group">
                 <label  class="col-sm-2 control-label" >单价:</label>
-                <input type="text" class="form-control"  style="display:inline;width:auto;" name="price" value="0">
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="price" >
             </div>
 
             <div class="form-group">
                 <label  class="col-sm-2 control-label" ></label>
-                <button type="submit" class="btn btn-success" >Submit</button>
+                <button type="submit" class="btn btn-success" >提交</button>
             </div>
         </form>
 

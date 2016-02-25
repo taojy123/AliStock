@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.db.models import Sum
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.views.decorators.csrf import csrf_exempt
@@ -18,7 +19,16 @@ def index(request):
 
 @login_required()
 def product_list(request):
-    products = Product.objects.all()
+    products = Product.objects.order_by('-update_time')
+
+    for product in products:
+        purchase_sum = product.purchase_set.all().aggregate(sum=Sum('quantity')).get('sum', 0) or 0
+        sale_sum = product.sale_set.all().aggregate(sum=Sum('quantity')).get('sum', 0) or 0
+        stock = purchase_sum - sale_sum
+        if stock != product.stock:
+            product.stock = stock
+            product.save()
+
     return render_to_response('product_list.html', locals())
 
 
@@ -30,7 +40,8 @@ def product_add(request):
     size = request.POST.get("size")
     pattern = request.POST.get("pattern")
     url = request.POST.get("url")
-    price = request.POST.get("price")
+    price = request.POST.get("price") or 0
+
     product = Product()
     product.pid = pid
     product.name = name
@@ -58,7 +69,8 @@ def product_update(request):
     size = request.POST.get("size")
     pattern = request.POST.get("pattern")
     url = request.POST.get("url")
-    price = request.POST.get("price")
+    price = request.POST.get("price") or 0
+
     product = Product.objects.get(id=id)
     product.pid = pid
     product.name = name
@@ -69,6 +81,110 @@ def product_update(request):
     product.price = price
     product.save()
     return HttpResponseRedirect("/product/list/")
+
+
+# ======== Purchase =====================
+
+@login_required()
+def purchase_list(request):
+    purchases = Purchase.objects.order_by('-create_time')
+    products = Product.objects.order_by('name', 'color', 'size', 'pattern')
+    return render_to_response('purchase_list.html', locals())
+
+
+@login_required()
+def purchase_add(request):
+    product_id = request.POST.get("product_id")
+    quantity = request.POST.get("quantity") or 0
+    price = request.POST.get("price") or 0
+    comment = request.POST.get("comment")
+
+    product = Product.objects.get(id=product_id)
+
+    purchase = Purchase()
+    purchase.product = product
+    purchase.quantity = quantity
+    purchase.price = price
+    purchase.comment = comment
+    purchase.save()
+    return HttpResponseRedirect("/purchase/list/")
+
+
+@login_required()
+def purchase_del(request, id):
+    Purchase.objects.filter(id=id).delete()
+    return HttpResponseRedirect("/purchase/list/")
+
+
+@login_required()
+def purchase_update(request):
+    id = request.POST.get("id")
+    product_id = request.POST.get("product_id") or 0
+    quantity = request.POST.get("quantity") or 0
+    price = request.POST.get("price")
+    comment = request.POST.get("comment")
+
+    product = Product.objects.get(id=product_id)
+
+    purchase = Purchase.objects.get(id=id)
+    purchase.product = product
+    purchase.quantity = quantity
+    purchase.price = price
+    purchase.comment = comment
+    purchase.save()
+    return HttpResponseRedirect("/purchase/list/")
+
+
+# ======== Sale =====================
+
+@login_required()
+def sale_list(request):
+    sales = Sale.objects.order_by('-create_time')
+    products = Product.objects.order_by('name', 'color', 'size', 'pattern')
+    return render_to_response('sale_list.html', locals())
+
+
+@login_required()
+def sale_add(request):
+    product_id = request.POST.get("product_id")
+    quantity = request.POST.get("quantity") or 0
+    price = request.POST.get("price") or 0
+    comment = request.POST.get("comment")
+
+    product = Product.objects.get(id=product_id)
+
+    sale = Sale()
+    sale.product = product
+    sale.quantity = quantity
+    sale.price = price
+    sale.comment = comment
+    sale.save()
+    return HttpResponseRedirect("/sale/list/")
+
+
+@login_required()
+def sale_del(request, id):
+    Sale.objects.filter(id=id).delete()
+    return HttpResponseRedirect("/sale/list/")
+
+
+@login_required()
+def sale_update(request):
+    id = request.POST.get("id")
+    product_id = request.POST.get("product_id") or 0
+    quantity = request.POST.get("quantity") or 0
+    price = request.POST.get("price")
+    comment = request.POST.get("comment")
+
+    product = Product.objects.get(id=product_id)
+
+    sale = Sale.objects.get(id=id)
+    sale.product = product
+    sale.quantity = quantity
+    sale.price = price
+    sale.comment = comment
+    sale.save()
+    return HttpResponseRedirect("/sale/list/")
 
 
 # ======== auth =====================
