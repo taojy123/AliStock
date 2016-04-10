@@ -21,7 +21,7 @@
                     <td>{{ r.quantity }}</td>
                     <td>{{ r.price }}</td>
                     <td>{{ r.comment }}</td>
-                    <td>{{ r.create_time|date:"Y-m-d H:i" }}</td>
+                    <td>{{ r.create_time|date:"Y-m-d H:i:s" }}</td>
                     <td>
                         <a class="btn btn-xs btn-danger" href="/purchase/del/{{ r.id }}/" onclick="return confirm('确定要删除吗?')">删除</a>
                         <a class="btn btn-xs btn-primary modify_btn"

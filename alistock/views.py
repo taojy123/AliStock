@@ -41,6 +41,7 @@ def product_add(request):
     pattern = request.POST.get("pattern")
     url = request.POST.get("url")
     price = request.POST.get("price") or 0
+    extra = request.POST.get("extra")
 
     product = Product()
     product.pid = pid
@@ -50,6 +51,7 @@ def product_add(request):
     product.pattern = pattern
     product.url = url
     product.price = price
+    product.extra = extra
     product.save()
     return HttpResponseRedirect("/product/list/")
 
@@ -70,6 +72,7 @@ def product_update(request):
     pattern = request.POST.get("pattern")
     url = request.POST.get("url")
     price = request.POST.get("price") or 0
+    extra = request.POST.get("extra")
 
     product = Product.objects.get(id=id)
     product.pid = pid
@@ -79,6 +82,7 @@ def product_update(request):
     product.pattern = pattern
     product.url = url
     product.price = price
+    product.extra = extra
     product.save()
     return HttpResponseRedirect("/product/list/")
 
@@ -96,10 +100,14 @@ def purchase_list(request):
 def purchase_add(request):
     product_id = request.POST.get("product_id")
     quantity = request.POST.get("quantity") or 0
-    price = request.POST.get("price") or 0
+    price = request.POST.get("price")
     comment = request.POST.get("comment")
 
     product = Product.objects.get(id=product_id)
+
+    if not price:
+        quantity = int(quantity)
+        price = quantity * product.price
 
     purchase = Purchase()
     purchase.product = product
@@ -119,12 +127,16 @@ def purchase_del(request, id):
 @login_required()
 def purchase_update(request):
     id = request.POST.get("id")
-    product_id = request.POST.get("product_id") or 0
+    product_id = request.POST.get("product_id")
     quantity = request.POST.get("quantity") or 0
     price = request.POST.get("price")
     comment = request.POST.get("comment")
 
     product = Product.objects.get(id=product_id)
+
+    if not price:
+        quantity = int(quantity)
+        price = quantity * product.price
 
     purchase = Purchase.objects.get(id=id)
     purchase.product = product
@@ -148,10 +160,14 @@ def sale_list(request):
 def sale_add(request):
     product_id = request.POST.get("product_id")
     quantity = request.POST.get("quantity") or 0
-    price = request.POST.get("price") or 0
+    price = request.POST.get("price")
     comment = request.POST.get("comment")
 
     product = Product.objects.get(id=product_id)
+
+    if not price:
+        quantity = int(quantity)
+        price = quantity * product.price
 
     sale = Sale()
     sale.product = product
@@ -171,12 +187,16 @@ def sale_del(request, id):
 @login_required()
 def sale_update(request):
     id = request.POST.get("id")
-    product_id = request.POST.get("product_id") or 0
+    product_id = request.POST.get("product_id")
     quantity = request.POST.get("quantity") or 0
     price = request.POST.get("price")
     comment = request.POST.get("comment")
 
     product = Product.objects.get(id=product_id)
+
+    if not price:
+        quantity = int(quantity)
+        price = quantity * product.price
 
     sale = Sale.objects.get(id=id)
     sale.product = product
@@ -185,6 +205,25 @@ def sale_update(request):
     sale.comment = comment
     sale.save()
     return HttpResponseRedirect("/sale/list/")
+
+
+def quick_input(request):
+    if request.method == 'POST':
+        data = request.POST.get('data')
+        data = data.upper()
+        product = Product.objects.filter(extra=data).first()
+        if not product:
+            return HttpResponse(u'没有对应产品')
+        sale = Sale()
+        sale.product = product
+        sale.quantity = 1
+        sale.price = product.price
+        if not request.user.is_anonymous():
+            sale.comment = u'%s 快速录入' % request.user.username
+        sale.save()
+        result = u'1份 %s , 录入成功' % product.name
+        return HttpResponse(result)
+    return render_to_response('quick_input.html', locals())
 
 
 # ======== auth =====================

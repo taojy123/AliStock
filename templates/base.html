@@ -39,20 +39,20 @@
         <div class="col-sm-3 col-md-2 sidebar" style="display:block;">
             <ul class="nav nav-sidebar">
 
-                <li id="product_list"><a href="/product/list/">产品</a></li>
-                <li id="purchase_list"><a href="/purchase/list/">进货</a></li>
-                <li id="sale_list"><a href="/sale/list/">出货</a></li>
+                <li id="quick_input"><a href="/quick_input/">快速录入</a></li>
 
                 {% if request.user.is_staff %}
-                    <li id="user_list"><a href="/user/list">用户管理</a></li>
+                    <li id="product_list"><a href="/product/list/">产品</a></li>
+                    <li id="purchase_list"><a href="/purchase/list/">进货</a></li>
+                    <li id="sale_list"><a href="/sale/list/">出货</a></li>
+                    <li id="user_list"><a href="/admin/">后台管理</a></li>
                 {% endif %}
 
                 {% if request.user.is_authenticated %}
-                    <li><a href="/password">Reset Password</a></li>
-                    <li><a href="/logout">Logout {{ request.user.username }}</a></li>
+                    <li><a href="/password">重置密码</a></li>
+                    <li><a href="/logout">退出登录 {{ request.user.username }}</a></li>
                 {% else %}
-                    <li id="loginpage"><a href="/loginpage">Login</a></li>
-{#                    <li id="registerpage"><a href="/registerpage">Register</a></li>#}
+                    <li id="loginpage"><a href="/loginpage">登录</a></li>
                 {% endif %}
 
             </ul>

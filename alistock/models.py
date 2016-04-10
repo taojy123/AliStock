@@ -22,7 +22,7 @@ class Product(models.Model):
 
 class Purchase(models.Model):
     product = models.ForeignKey(Product)
-    quantity = models.IntegerField(default=0)
+    quantity = models.IntegerField(default=1)
     price = models.FloatField(default=0, blank=True, null=True)
     comment = models.CharField(max_length=255, blank=True, null=True)
     create_time = models.DateTimeField(auto_now_add=True)
@@ -31,7 +31,7 @@ class Purchase(models.Model):
 
 class Sale(models.Model):
     product = models.ForeignKey(Product)
-    quantity = models.IntegerField(default=0)
+    quantity = models.IntegerField(default=1)
     price = models.FloatField(default=0, blank=True, null=True)
     comment = models.CharField(max_length=255, blank=True, null=True)
     create_time = models.DateTimeField(auto_now_add=True)
