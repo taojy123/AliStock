@@ -218,8 +218,9 @@ def quick_input(request):
         sale.product = product
         sale.quantity = 1
         sale.price = product.price
+        sale.comment = u'快速录入'
         if not request.user.is_anonymous():
-            sale.comment = u'%s 快速录入' % request.user.username
+            sale.comment = request.user.username + sale.comment
         sale.save()
         result = u'1份 %s , 录入成功' % product.name
         return HttpResponse(result)
