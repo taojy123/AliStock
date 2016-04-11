@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import datetime
 from django.db import models
 
 
@@ -37,3 +38,8 @@ class Sale(models.Model):
     create_time = models.DateTimeField(auto_now_add=True)
     extra = models.TextField(blank=True, null=True)
 
+    @property
+    def is_today(self):
+        now = datetime.datetime.now()
+        t = self.create_time
+        return now.year == t.year and now.month == t.month and now.day == t.day

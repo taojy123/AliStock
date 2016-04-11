@@ -152,14 +152,12 @@ def purchase_update(request):
 
 # ======== Sale =====================
 
-@login_required()
 def sale_list(request):
     sales = Sale.objects.order_by('-create_time')
     products = Product.objects.order_by('name', 'color', 'size', 'pattern')
     return render_to_response('sale_list.html', locals())
 
 
-@login_required()
 def sale_add(request):
     product_id = request.POST.get("product_id")
     quantity = request.POST.get("quantity") or 0
@@ -181,13 +179,11 @@ def sale_add(request):
     return HttpResponseRedirect("/sale/list/")
 
 
-@login_required()
 def sale_del(request, id):
     Sale.objects.filter(id=id).delete()
     return HttpResponseRedirect("/sale/list/")
 
 
-@login_required()
 def sale_update(request):
     id = request.POST.get("id")
     product_id = request.POST.get("product_id")
@@ -210,7 +206,6 @@ def sale_update(request):
     return HttpResponseRedirect("/sale/list/")
 
 
-@login_required()
 def quick_input(request):
     if request.method == 'POST':
         data = request.POST.get('data')
@@ -229,7 +224,6 @@ def quick_input(request):
     return render_to_response('quick_input.html', locals())
 
 
-@login_required()
 def report(request):
 
     now = datetime.datetime.now()

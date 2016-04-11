@@ -23,7 +23,7 @@
                     <td>{{ r.comment }}</td>
                     <td>{{ r.create_time|date:"Y-m-d H:i:s" }}</td>
                     <td>
-                        {% if request.user.is_staff %}
+                        {% if request.user.is_staff or r.is_today %}
                             <a class="btn btn-xs btn-danger" href="/sale/del/{{ r.id }}/" onclick="return confirm('确定要删除吗?')">删除</a>
                             <a class="btn btn-xs btn-primary modify_btn"
                                data-id="{{ r.id }}"
