@@ -16,7 +16,12 @@
 
     <div id="log"></div>
 
+    <a href="/report/" class="btn btn-primary">生成报表</a>
+
     <script>
+
+        $("#quick_input").addClass('active');
+
         $(function(){
             $("#form").submit(function(){
                 var data = $("#data").val()

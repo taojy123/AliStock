@@ -7,9 +7,11 @@ from django.shortcuts import render_to_response
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import auth
 from models import *
+import datetime
 import xlwt
 import os
 import uuid
+import StringIO
 
 
 def index(request):
@@ -230,18 +232,76 @@ def quick_input(request):
 @login_required()
 def report(request):
 
+    now = datetime.datetime.now()
+
+    if now.month == 12:
+        next_month = 1
+    else:
+        next_month = now.month + 1
+
+    day_begin = now.replace(hour=0, minute=0, second=0)
+    day_end = now.replace(hour=23, minute=59, second=59)
+    month_begin = now.replace(day=1, hour=0, minute=0, second=0)
+    month_end = now.replace(month=next_month, day=1, hour=0, minute=0, second=0)
+    year_begin = now.replace(month=1, day=1, hour=0, minute=0, second=0)
+    year_end = now.replace(month=12, day=31, hour=23, minute=59, second=59)
+
     w = xlwt.Workbook()
     ws = w.add_sheet('day')
 
-    ws.write(1, 1, u'序号')
-    ws.write(1, 2, u'标记')
-    ws.write(1, 3, u'品种')
-    ws.write(1, 4, u'出货量')
-    ws.write(1, 5, u'时间明细')
+    ws.write(0, 0, u'序号')
+    ws.write(0, 1, u'标记')
+    ws.write(0, 2, u'品种')
+    ws.write(0, 3, u'出货量')
+    ws.write(0, 4, u'时间明细')
 
-    # w.save('mini.xls')
+    sales = Sale.objects.filter(create_time__gte=day_begin, create_time__lte=day_end).order_by('create_time')
 
-    return render_to_response('quick_input.html', locals())
+    product_t_dict = {}
+    product_list = []
+    t_list = []
+    for sale in sales:
+        product = sale.product
+        t = sale.create_time.strftime('%H:%M')
+        if product not in product_list:
+            product_list.append(product)
+        if t not in t_list:
+            t_list.append(t)
+        product_t_dict[(product.id, t)] = product_t_dict.get((product.id, t), 0) + int(sale.quantity)
+
+    j = 4
+    for t in t_list:
+        j += 1
+        ws.write(0, j, t)
+
+    day_datas = []
+    i = 0
+    for product in product_list:
+        i += 1
+        ws.write(i, 0, i)
+        ws.write(i, 1, product.extra)
+        ws.write(i, 2, product.name)
+
+        total_quantity = 0
+        j = 4
+        for t in t_list:
+            quantity = product_t_dict.get((product.id, t), 0)
+            total_quantity += quantity
+            j += 1
+            if quantity:
+                ws.write(i, j, quantity)
+
+        ws.write(i, 3, total_quantity)
+
+    s = StringIO.StringIO()
+    w.save(s)
+
+    s.seek(0)
+    s = s.read()
+    response = HttpResponse(s, content_type="application/octet-stream")
+    response['Content-Disposition'] = 'attachment; filename=report.xls'
+
+    return response
 
 
 # ======== auth =====================
