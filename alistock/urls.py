@@ -26,6 +26,7 @@ urlpatterns = patterns('',
     ('^sale/update/$', sale_update),
 
     ('^quick_input/$', quick_input),
+    ('^report/$', report),
 
 
     ('^loginpage/$', loginpage),

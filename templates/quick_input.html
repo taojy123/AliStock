@@ -8,7 +8,7 @@
     <form action="/purchase/update/" method="POST" class="form-horizontal" id="form">
 
         <div class="form-group">
-            <input type="text" class="form-control" name="data" id="data" style="display:inline;width:auto;" placeholder="商品标识" autocomplete="off">
+            <input type="text" class="form-control" name="data" id="data" style="display:inline;width:auto;" placeholder="商品标记" autocomplete="off">
             <button type="submit" class="btn btn-success" >提交</button>
         </div>
 
@@ -33,6 +33,12 @@
                     }
                 });
                 return false
+            })
+
+            $("#data").keypress(function(event){
+                if(event.charCode==32){
+                    $("#form").submit()
+                }
             })
         })
     </script>

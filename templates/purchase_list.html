@@ -23,14 +23,16 @@
                     <td>{{ r.comment }}</td>
                     <td>{{ r.create_time|date:"Y-m-d H:i:s" }}</td>
                     <td>
-                        <a class="btn btn-xs btn-danger" href="/purchase/del/{{ r.id }}/" onclick="return confirm('确定要删除吗?')">删除</a>
-                        <a class="btn btn-xs btn-primary modify_btn"
-                           data-id="{{ r.id }}"
-                           data-product_id="{{ r.product_id }}"
-                           data-quantity="{{ r.quantity }}"
-                           data-price="{{ r.price }}"
-                           data-comment="{{ r.comment }}"
-                           href="#modify" >修改</a>
+                        {% if request.user.is_staff %}
+                            <a class="btn btn-xs btn-danger" href="/purchase/del/{{ r.id }}/" onclick="return confirm('确定要删除吗?')">删除</a>
+                            <a class="btn btn-xs btn-primary modify_btn"
+                               data-id="{{ r.id }}"
+                               data-product_id="{{ r.product_id }}"
+                               data-quantity="{{ r.quantity }}"
+                               data-price="{{ r.price }}"
+                               data-comment="{{ r.comment }}"
+                               href="#modify" >修改</a>
+                        {% endif %}
                     </td>
                 </tr>
             {% endfor %}
@@ -77,7 +79,10 @@
 
     <div id="add" style="margin-top: 50px">
         <label  class="col-sm-2 control-label" ></label>
-        <button id="add_btn" class="btn btn-warning">添加新记录</button>
+
+        {% if request.user.is_staff %}
+            <button id="add_btn" class="btn btn-warning">添加新记录</button>
+        {% endif %}
 
         <form id="form" action="/purchase/add/" method="POST" class="form-horizontal" style="margin-top: 30px;display: none">
 

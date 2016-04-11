@@ -7,6 +7,7 @@ from django.shortcuts import render_to_response
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import auth
 from models import *
+import xlwt
 import os
 import uuid
 
@@ -207,10 +208,11 @@ def sale_update(request):
     return HttpResponseRedirect("/sale/list/")
 
 
+@login_required()
 def quick_input(request):
     if request.method == 'POST':
         data = request.POST.get('data')
-        data = data.upper()
+        data = data.strip().upper()
         product = Product.objects.filter(extra=data).first()
         if not product:
             return HttpResponse(u'没有对应产品')
@@ -218,12 +220,27 @@ def quick_input(request):
         sale.product = product
         sale.quantity = 1
         sale.price = product.price
-        sale.comment = u'快速录入'
-        if not request.user.is_anonymous():
-            sale.comment = request.user.username + sale.comment
+        sale.comment = u'%s 快速录入' % request.user.username
         sale.save()
         result = u'1份 %s , 录入成功' % product.name
         return HttpResponse(result)
+    return render_to_response('quick_input.html', locals())
+
+
+@login_required()
+def report(request):
+
+    w = xlwt.Workbook()
+    ws = w.add_sheet('day')
+
+    ws.write(1, 1, u'序号')
+    ws.write(1, 2, u'标记')
+    ws.write(1, 3, u'品种')
+    ws.write(1, 4, u'出货量')
+    ws.write(1, 5, u'时间明细')
+
+    # w.save('mini.xls')
+
     return render_to_response('quick_input.html', locals())
 
 

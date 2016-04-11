@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-    <title>AliStock</title>
+    <title>WE水吧助手</title>
 
     <link href="/static/css/bootstrap.css" rel="stylesheet">
     <link href="/static/css/bootstrap-table.css" rel="stylesheet"/>
@@ -26,7 +26,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="/">阿里库存助手</a>
+            <a class="navbar-brand" href="/">WE水吧助手</a>
         </div>
         <div class="navbar-collapse collapse">
         </div>
@@ -41,18 +41,15 @@
 
                 <li id="quick_input"><a href="/quick_input/">快速录入</a></li>
 
-                {% if request.user.is_staff %}
+                {% if request.user.is_authenticated %}
                     <li id="product_list"><a href="/product/list/">产品</a></li>
                     <li id="purchase_list"><a href="/purchase/list/">进货</a></li>
                     <li id="sale_list"><a href="/sale/list/">出货</a></li>
                     <li id="user_list"><a href="/admin/">后台管理</a></li>
-                {% endif %}
-
-                {% if request.user.is_authenticated %}
-                    <li><a href="/password">重置密码</a></li>
-                    <li><a href="/logout">退出登录 {{ request.user.username }}</a></li>
+                    <li><a href="/password/">重置密码</a></li>
+                    <li><a href="/logout/">退出登录 {{ request.user.username }}</a></li>
                 {% else %}
-                    <li id="loginpage"><a href="/loginpage">登录</a></li>
+                    <li id="loginpage"><a href="/loginpage/">登录</a></li>
                 {% endif %}
 
             </ul>
