@@ -247,12 +247,14 @@ def report(request):
     year_end = now.replace(month=12, day=31, hour=23, minute=59, second=59)
 
     w = xlwt.Workbook()
+
+    # ----------- day ------------
     ws = w.add_sheet('day')
 
     ws.write(0, 0, u'序号')
     ws.write(0, 1, u'标记')
     ws.write(0, 2, u'品种')
-    ws.write(0, 3, u'出货量')
+    ws.write(0, 3, u'日出货量')
     ws.write(0, 4, u'时间明细')
 
     sales = Sale.objects.filter(create_time__gte=day_begin, create_time__lte=day_end).order_by('create_time')
@@ -274,7 +276,98 @@ def report(request):
         j += 1
         ws.write(0, j, t)
 
-    day_datas = []
+    i = 0
+    for product in product_list:
+        i += 1
+        ws.write(i, 0, i)
+        ws.write(i, 1, product.extra)
+        ws.write(i, 2, product.name)
+
+        total_quantity = 0
+        j = 4
+        for t in t_list:
+            quantity = product_t_dict.get((product.id, t), 0)
+            total_quantity += quantity
+            j += 1
+            if quantity:
+                ws.write(i, j, quantity)
+
+        ws.write(i, 3, total_quantity)
+
+    # ----------- month ------------
+    ws = w.add_sheet('month')
+
+    ws.write(0, 0, u'序号')
+    ws.write(0, 1, u'标记')
+    ws.write(0, 2, u'品种')
+    ws.write(0, 3, u'月出货量')
+    ws.write(0, 4, u'日期明细')
+
+    sales = Sale.objects.filter(create_time__gte=month_begin, create_time__lte=month_end).order_by('create_time')
+
+    product_t_dict = {}
+    product_list = []
+    t_list = []
+    for sale in sales:
+        product = sale.product
+        t = sale.create_time.strftime('%m-%d')
+        if product not in product_list:
+            product_list.append(product)
+        if t not in t_list:
+            t_list.append(t)
+        product_t_dict[(product.id, t)] = product_t_dict.get((product.id, t), 0) + int(sale.quantity)
+
+    j = 4
+    for t in t_list:
+        j += 1
+        ws.write(0, j, t)
+
+    i = 0
+    for product in product_list:
+        i += 1
+        ws.write(i, 0, i)
+        ws.write(i, 1, product.extra)
+        ws.write(i, 2, product.name)
+
+        total_quantity = 0
+        j = 4
+        for t in t_list:
+            quantity = product_t_dict.get((product.id, t), 0)
+            total_quantity += quantity
+            j += 1
+            if quantity:
+                ws.write(i, j, quantity)
+
+        ws.write(i, 3, total_quantity)
+
+    # ----------- year ------------
+    ws = w.add_sheet('year')
+
+    ws.write(0, 0, u'序号')
+    ws.write(0, 1, u'标记')
+    ws.write(0, 2, u'品种')
+    ws.write(0, 3, u'年出货量')
+    ws.write(0, 4, u'月份明细')
+
+    sales = Sale.objects.filter(create_time__gte=year_begin, create_time__lte=year_end).order_by('create_time')
+
+    product_t_dict = {}
+    product_list = []
+    t_list = []
+    for sale in sales:
+        product = sale.product
+        t = sale.create_time.strftime('%Y-%m')
+        if product not in product_list:
+            product_list.append(product)
+        if t not in t_list:
+            t_list.append(t)
+        product_t_dict[(product.id, t)] = product_t_dict.get((product.id, t), 0) + int(sale.quantity)
+
+    j = 4
+    for t in t_list:
+        j += 1
+        ws.write(0, j, t)
+
     i = 0
     for product in product_list:
         i += 1
@@ -299,7 +392,7 @@ def report(request):
     s.seek(0)
     s = s.read()
     response = HttpResponse(s, content_type="application/octet-stream")
-    response['Content-Disposition'] = 'attachment; filename=report.xls'
+    response['Content-Disposition'] = 'attachment; filename=%s.xls' % now.strftime('%Y-%m-%d')
 
     return response
 
