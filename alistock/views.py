@@ -27,7 +27,7 @@ def ip_required(func=None):
 
         allow_ip = Site.objects.filter(domain='allow_ip').first().name
         client_ip = request.META.get('REMOTE_ADDR', '1.1.1.1')
-        if client_ip in allow_ip:
+        if client_ip[:-3] in allow_ip:
             return func(request, *args, **kwargs)
 
         return HttpResponseRedirect(settings.LOGIN_URL)
