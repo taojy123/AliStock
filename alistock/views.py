@@ -24,8 +24,8 @@ def ip_required(func=None):
         if request.user.is_staff:
             return func(request, *args, **kwargs)
 
-        allow_ip = Site.objects.filter(domian='allow_ip').name
-        client_ip = request.META.get('HTTP_X_REAL_IP', 'None')
+        allow_ip = Site.objects.filter(domain='allow_ip').name
+        client_ip = request.META.get('HTTP_X_REAL_IP', '-')
         if client_ip in allow_ip:
             return func(request, *args, **kwargs)
 
@@ -34,7 +34,7 @@ def ip_required(func=None):
 
 
 def index(request):
-    client_ip = request.META.get('HTTP_X_REAL_IP', 'None')
+    client_ip = request.META.get('HTTP_X_REAL_IP', '-')
     return render_to_response('index.html', locals())
 
 
@@ -233,7 +233,7 @@ def sale_update(request):
 @ip_required
 def quick_input(request):
     if request.method == 'POST':
-        client_ip = request.META.get('HTTP_X_REAL_IP', 'None')
+        client_ip = request.META.get('HTTP_X_REAL_IP', '-')
         data = request.POST.get('data')
         data = data.strip().upper()
         product = Product.objects.filter(extra=data).first()
