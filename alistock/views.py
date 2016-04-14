@@ -6,6 +6,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import auth
+from django.contrib.sites.models import Site
 from models import *
 import datetime
 import xlwt
@@ -14,7 +15,26 @@ import uuid
 import StringIO
 
 
+
+
+
+def ip_required(func=None):
+    def _d(request, *args, **kwargs):
+
+        if request.user.is_staff:
+            return func(request, *args, **kwargs)
+
+        allow_ip = Site.objects.filter(domian='allow_ip').name
+        client_ip = request.META.get('HTTP_X_REAL_IP', 'None')
+        if client_ip in allow_ip:
+            return func(request, *args, **kwargs)
+
+        return HttpResponseForbidden('Forbidden')
+    return _d
+
+
 def index(request):
+    client_ip = request.META.get('HTTP_X_REAL_IP', 'None')
     return render_to_response('index.html', locals())
 
 
@@ -152,12 +172,14 @@ def purchase_update(request):
 
 # ======== Sale =====================
 
+@ip_required
 def sale_list(request):
     sales = Sale.objects.order_by('-create_time')
     products = Product.objects.order_by('name', 'color', 'size', 'pattern')
     return render_to_response('sale_list.html', locals())
 
 
+@ip_required
 def sale_add(request):
     product_id = request.POST.get("product_id")
     quantity = request.POST.get("quantity") or 0
@@ -179,11 +201,13 @@ def sale_add(request):
     return HttpResponseRedirect("/sale/list/")
 
 
+@ip_required
 def sale_del(request, id):
     Sale.objects.filter(id=id).delete()
     return HttpResponseRedirect("/sale/list/")
 
 
+@ip_required
 def sale_update(request):
     id = request.POST.get("id")
     product_id = request.POST.get("product_id")
@@ -206,8 +230,10 @@ def sale_update(request):
     return HttpResponseRedirect("/sale/list/")
 
 
+@ip_required
 def quick_input(request):
     if request.method == 'POST':
+        client_ip = request.META.get('HTTP_X_REAL_IP', 'None')
         data = request.POST.get('data')
         data = data.strip().upper()
         product = Product.objects.filter(extra=data).first()
@@ -217,7 +243,7 @@ def quick_input(request):
         sale.product = product
         sale.quantity = 1
         sale.price = product.price
-        sale.comment = u'%s 快速录入' % request.user.username
+        sale.comment = u'快速录入(%s)' % client_ip
         sale.save()
         result = u'1份 %s , 录入成功' % product.name
         return HttpResponse(result)
@@ -396,8 +422,10 @@ def report(request):
 def loginpage(request):
     return render_to_response('loginpage.html', locals())
 
+
 def registerpage(request):
     return render_to_response('registerpage.html', locals())
+
 
 def login(request):
     username = request.REQUEST.get('username', '')
@@ -407,10 +435,12 @@ def login(request):
         auth.login(request, user)
     return HttpResponseRedirect("/")
 
+
 def logout(request):
     if request.user.is_authenticated():
         auth.logout(request)
     return HttpResponseRedirect("/")
+
 
 def register(request):
     msg = ""
@@ -430,9 +460,11 @@ def register(request):
     msg = "You make a mistake, please re-enter"
     return render_to_response('registerpage.html', locals())
 
+
 @login_required(login_url="/loginpage")
 def password(request):
     return render_to_response('password.html', locals())
+
 
 @login_required(login_url="/loginpage")
 def password_reset(request):
