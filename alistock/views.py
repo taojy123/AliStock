@@ -24,7 +24,7 @@ def ip_required(func=None):
         if request.user.is_staff:
             return func(request, *args, **kwargs)
 
-        allow_ip = Site.objects.filter(domain='allow_ip').name
+        allow_ip = Site.objects.filter(domain='allow_ip').first().name
         client_ip = request.META.get('HTTP_X_REAL_IP', '-')
         if client_ip in allow_ip:
             return func(request, *args, **kwargs)
