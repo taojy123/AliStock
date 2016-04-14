@@ -7,6 +7,7 @@ from django.shortcuts import render_to_response
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import auth
 from django.contrib.sites.models import Site
+from django.conf import settings
 from models import *
 import datetime
 import xlwt
@@ -29,7 +30,7 @@ def ip_required(func=None):
         if client_ip in allow_ip:
             return func(request, *args, **kwargs)
 
-        return HttpResponseForbidden('Forbidden')
+        return HttpResponseRedirect(settings.LOGIN_URL)
     return _d
 
 
