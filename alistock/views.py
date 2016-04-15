@@ -420,7 +420,7 @@ def write_report(ws, sales, time_flag='%H:%M'):
         price = product.price
         total_quantity = 0
         total_price = 0
-        j = 4
+        j = 5
         for t in t_list:
             quantity = product_t_dict.get((product.id, t), 0)
             total_quantity += quantity
