@@ -276,44 +276,12 @@ def report(request):
     ws.write(0, 1, u'标记')
     ws.write(0, 2, u'品种')
     ws.write(0, 3, u'日出货量')
-    ws.write(0, 4, u'时间明细')
+    ws.write(0, 4, u'每份价格')
+    ws.write(0, 5, u'小计金额')
 
     sales = Sale.objects.filter(create_time__gte=day_begin, create_time__lte=day_end).order_by('create_time')
 
-    product_t_dict = {}
-    product_list = []
-    t_list = []
-    for sale in sales:
-        product = sale.product
-        t = sale.create_time.strftime('%H:%M')
-        if product not in product_list:
-            product_list.append(product)
-        if t not in t_list:
-            t_list.append(t)
-        product_t_dict[(product.id, t)] = product_t_dict.get((product.id, t), 0) + int(sale.quantity)
-
-    j = 4
-    for t in t_list:
-        j += 1
-        ws.write(0, j, t)
-
-    i = 0
-    for product in product_list:
-        i += 1
-        ws.write(i, 0, i)
-        ws.write(i, 1, product.extra)
-        ws.write(i, 2, product.name)
-
-        total_quantity = 0
-        j = 4
-        for t in t_list:
-            quantity = product_t_dict.get((product.id, t), 0)
-            total_quantity += quantity
-            j += 1
-            if quantity:
-                ws.write(i, j, quantity)
-
-        ws.write(i, 3, total_quantity)
+    write_report(ws, sales, '%H:%M')
 
     # ----------- month ------------
     ws = w.add_sheet('month')
@@ -322,44 +290,12 @@ def report(request):
     ws.write(0, 1, u'标记')
     ws.write(0, 2, u'品种')
     ws.write(0, 3, u'月出货量')
-    ws.write(0, 4, u'日期明细')
+    ws.write(0, 4, u'每份价格')
+    ws.write(0, 5, u'小计金额')
 
     sales = Sale.objects.filter(create_time__gte=month_begin, create_time__lte=month_end).order_by('create_time')
 
-    product_t_dict = {}
-    product_list = []
-    t_list = []
-    for sale in sales:
-        product = sale.product
-        t = sale.create_time.strftime('%m-%d')
-        if product not in product_list:
-            product_list.append(product)
-        if t not in t_list:
-            t_list.append(t)
-        product_t_dict[(product.id, t)] = product_t_dict.get((product.id, t), 0) + int(sale.quantity)
-
-    j = 4
-    for t in t_list:
-        j += 1
-        ws.write(0, j, t)
-
-    i = 0
-    for product in product_list:
-        i += 1
-        ws.write(i, 0, i)
-        ws.write(i, 1, product.extra)
-        ws.write(i, 2, product.name)
-
-        total_quantity = 0
-        j = 4
-        for t in t_list:
-            quantity = product_t_dict.get((product.id, t), 0)
-            total_quantity += quantity
-            j += 1
-            if quantity:
-                ws.write(i, j, quantity)
-
-        ws.write(i, 3, total_quantity)
+    write_report(ws, sales, '%m-%d')
 
     # ----------- year ------------
     ws = w.add_sheet('year')
@@ -368,44 +304,14 @@ def report(request):
     ws.write(0, 1, u'标记')
     ws.write(0, 2, u'品种')
     ws.write(0, 3, u'年出货量')
-    ws.write(0, 4, u'月份明细')
+    ws.write(0, 4, u'每份价格')
+    ws.write(0, 5, u'小计金额')
 
     sales = Sale.objects.filter(create_time__gte=year_begin, create_time__lte=year_end).order_by('create_time')
 
-    product_t_dict = {}
-    product_list = []
-    t_list = []
-    for sale in sales:
-        product = sale.product
-        t = sale.create_time.strftime('%Y-%m')
-        if product not in product_list:
-            product_list.append(product)
-        if t not in t_list:
-            t_list.append(t)
-        product_t_dict[(product.id, t)] = product_t_dict.get((product.id, t), 0) + int(sale.quantity)
+    write_report(ws, sales, '%Y-%m')
 
-    j = 4
-    for t in t_list:
-        j += 1
-        ws.write(0, j, t)
-
-    i = 0
-    for product in product_list:
-        i += 1
-        ws.write(i, 0, i)
-        ws.write(i, 1, product.extra)
-        ws.write(i, 2, product.name)
-
-        total_quantity = 0
-        j = 4
-        for t in t_list:
-            quantity = product_t_dict.get((product.id, t), 0)
-            total_quantity += quantity
-            j += 1
-            if quantity:
-                ws.write(i, j, quantity)
-
-        ws.write(i, 3, total_quantity)
+    # -----------------------------
 
     s = StringIO.StringIO()
     w.save(s)
@@ -482,4 +388,64 @@ def password_reset(request):
             return HttpResponseRedirect("/")
     msg = "You make a mistake, please re-enter"
     return render_to_response('password.html', locals())
+
+
+def write_report(ws, sales, time_flag='%H:%M'):
+    product_t_dict = {}
+    product_list = []
+    t_list = []
+    for sale in sales:
+        product = sale.product
+        t = sale.create_time.strftime(time_flag)
+        if product not in product_list:
+            product_list.append(product)
+        if t not in t_list:
+            t_list.append(t)
+        product_t_dict[(product.id, t)] = product_t_dict.get((product.id, t), 0) + int(sale.quantity)
+
+    j = 5
+    for t in t_list:
+        j += 1
+        ws.write(0, j, t)
+
+    sum_quantity = 0
+    sum_price = 0
+    i = 0
+    for product in product_list:
+        i += 1
+        ws.write(i, 0, i)
+        ws.write(i, 1, product.extra)
+        ws.write(i, 2, product.name)
+
+        price = product.price
+        total_quantity = 0
+        total_price = 0
+        j = 4
+        for t in t_list:
+            quantity = product_t_dict.get((product.id, t), 0)
+            total_quantity += quantity
+            total_price += quantity * price
+            j += 1
+            if quantity:
+                ws.write(i, j, quantity)
+
+        ws.write(i, 3, total_quantity)
+        ws.write(i, 4, price)
+        ws.write(i, 5, total_price)
+
+        sum_quantity += total_quantity
+        sum_price += total_price
+
+    i += 1
+    ws.write(i, 3, sum_quantity)
+    ws.write(i, 5, sum_price)
+
+    j = 5
+    for t in t_list:
+        j += 1
+        sub_quantity = 0
+        for product in product_list:
+            quantity = product_t_dict.get((product.id, t), 0)
+            sub_quantity += quantity
+        ws.write(i, j, sub_quantity)
 
