@@ -313,15 +313,19 @@ def report(request):
 
     # -----------------------------
 
-    s = StringIO.StringIO()
-    w.save(s)
+    # s = StringIO.StringIO()
+    # w.save(s)
+    #
+    # s.seek(0)
+    # s = s.read()
+    # response = HttpResponse(s, content_type="application/octet-stream")
+    # response['Content-Disposition'] = 'attachment; filename=%s.xls' % now.strftime('%Y-%m-%d')
+    #
+    # return response
 
-    s.seek(0)
-    s = s.read()
-    response = HttpResponse(s, content_type="application/octet-stream")
-    response['Content-Disposition'] = 'attachment; filename=%s.xls' % now.strftime('%Y-%m-%d')
-
-    return response
+    filename = '% s.xls' % now.strftime('%Y-%m-%d')
+    w.save('./static/files/%s' % filename)
+    return HttpResponseRedirect('/static/files/%s' % filename)
 
 
 # ======== auth =====================
