@@ -444,7 +444,8 @@ def report(request):
             sub_quantity += quantity
         ws.write(i, j, sub_quantity, style_orange)
 
-    ws.write_merge(special_start_row, i - 1, 0, 0, u'特价品种')
+    if special_start_row <= i - 1:
+        ws.write_merge(special_start_row, i - 1, 0, 0, u'特价品种')
 
     i += 1
     ws.write(i, 3, u'合计', style_red)
@@ -640,7 +641,8 @@ def report(request):
         j += 1
         ws.write(i, j, sub_price, style_orange)
 
-    ws.write_merge(special_start_row, i - 1, 0, 0, u'特价品种')
+    if special_start_row <= i - 1:
+        ws.write_merge(special_start_row, i - 1, 0, 0, u'特价品种')
 
     i += 1
     ws.write(i, 2, u'合计', style_red)
@@ -822,7 +824,8 @@ def report(request):
         j += 1
         ws.write(i, j, sub_price, style_orange)
 
-    ws.write_merge(special_start_row, i - 1, 0, 0, u'特价品种')
+    if special_start_row <= i - 1:
+        ws.write_merge(special_start_row, i - 1, 0, 0, u'特价品种')
 
     i += 1
     ws.write(i, 2, u'合计', style_red)
