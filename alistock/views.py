@@ -16,9 +16,6 @@ import uuid
 import StringIO
 
 
-
-
-
 def ip_required(func=None):
     def _d(request, *args, **kwargs):
 
@@ -65,6 +62,7 @@ def product_add(request):
     pattern = request.POST.get("pattern")
     url = request.POST.get("url")
     price = request.POST.get("price") or 0
+    special = request.POST.get("special") or 0
     extra = request.POST.get("extra")
 
     product = Product()
@@ -75,6 +73,7 @@ def product_add(request):
     product.pattern = pattern
     product.url = url
     product.price = price
+    product.special = special
     product.extra = extra
     product.save()
     return HttpResponseRedirect("/product/list/")
@@ -96,6 +95,7 @@ def product_update(request):
     pattern = request.POST.get("pattern")
     url = request.POST.get("url")
     price = request.POST.get("price") or 0
+    special = request.POST.get("special") or 0
     extra = request.POST.get("extra")
 
     product = Product.objects.get(id=id)
@@ -106,6 +106,7 @@ def product_update(request):
     product.pattern = pattern
     product.url = url
     product.price = price
+    product.special = special
     product.extra = extra
     product.save()
     return HttpResponseRedirect("/product/list/")
@@ -243,15 +244,41 @@ def quick_input(request):
         sale = Sale()
         sale.product = product
         sale.quantity = 1
-        sale.price = product.price
-        sale.comment = u'快速录入(%s)' % client_ip
+        sale.price = product.current_price
+
+        if product.special > 0:
+            sale.comment = u'[特价]快速录入(%s)' % client_ip
+            sale.is_special = True
+            result = u'[特价]1份 %s , 录入成功' % product.name
+        else:
+            sale.comment = u'快速录入(%s)' % client_ip
+            sale.is_special = False
+            result = u'1份 %s , 录入成功' % product.name
+
         sale.save()
-        result = u'1份 %s , 录入成功' % product.name
+
         return HttpResponse(result)
     return render_to_response('quick_input.html', locals())
 
 
+@ip_required
+def quick_delete(request):
+    now = datetime.datetime.now()
+    sale = Sale.objects.order_by('-create_time').first()
+    if (now - sale.create_time).seconds < 600:
+        # 只能删除最近10分钟产生的记录
+        sale.delete()
+        return HttpResponseRedirect('/quick_input/')
+    return HttpResponse(u'删除失败,只能删除最近10分钟产生的记录,请联系管理员.<a href="/">返回首页</a>')
+
+
 def report(request):
+
+    style_blue = xlwt.easyxf('pattern: pattern solid, fore_colour ice_blue;')
+    style_orange = xlwt.easyxf('pattern: pattern solid, fore_colour orange;')
+    style_red = xlwt.easyxf('pattern: pattern solid, fore_colour red;')
+
+    all_products = Product.objects.order_by('id')
 
     now = datetime.datetime.now()
 
@@ -270,46 +297,539 @@ def report(request):
     w = xlwt.Workbook()
 
     # ----------- day ------------
-    ws = w.add_sheet('day')
-
-    ws.write(0, 0, u'序号')
-    ws.write(0, 1, u'标记')
-    ws.write(0, 2, u'品种')
-    ws.write(0, 3, u'日出货量')
-    ws.write(0, 4, u'每份价格')
-    ws.write(0, 5, u'小计金额')
+    sheet_name = u'%d年%d月%d日' % (now.year, now.month, now.day)
+    ws = w.add_sheet(sheet_name)
 
     sales = Sale.objects.filter(create_time__gte=day_begin, create_time__lte=day_end).order_by('create_time')
 
-    write_report(ws, sales, '%H:%M')
+    time_flag = '%H:%M'
+
+    product_t_price = {}
+    product_t_quantity = {}
+    special_product_t_price = {}
+    special_product_t_quantity = {}
+    t_list = []
+    product_list = []
+    special_product_list = []
+    for sale in sales:
+        product = sale.product
+        t = sale.create_time.strftime(time_flag)
+        if t not in t_list:
+            t_list.append(t)
+
+        if sale.is_special:
+            if product not in special_product_list:
+                special_product_list.append(product)
+            special_product_t_price[(product.id, t)] = sale.price
+            special_product_t_quantity[(product.id, t)] = special_product_t_quantity.get((product.id, t), 0) + int(sale.quantity)
+        else:
+            if product not in product_list:
+                product_list.append(product)
+            product_t_price[(product.id, t)] = sale.price
+            product_t_quantity[(product.id, t)] = product_t_quantity.get((product.id, t), 0) + int(sale.quantity)
+
+    for product in all_products:
+        if product not in product_list + special_product_list:
+            product_list.append(product)
+
+    i = 0
+
+    ws.write(i, 1, u'标记')
+    ws.write(i, 2, u'品种')
+    ws.write(i, 3, u'单价')
+    ws.write(i, 4, u'数量')
+    ws.write(i, 5, u'小计金额')
+
+    j = 5
+    for t in t_list:
+        j += 1
+        ws.write(i, j, t)
+
+    sum_quantity = 0
+    sum_price = 0
+    for product in product_list:
+        i += 1
+        ws.write(i, 1, product.extra)
+        ws.write(i, 2, product.name)
+
+        price = product.current_price
+        total_quantity = 0
+        total_price = 0
+        j = 5
+        for t in t_list:
+            price = product_t_price.get((product.id, t), product.current_price)
+            quantity = product_t_quantity.get((product.id, t), 0)
+            total_quantity += quantity
+            total_price += quantity * price
+            j += 1
+            if quantity:
+                ws.write(i, j, quantity)
+
+        ws.write(i, 3, price)
+        ws.write(i, 4, total_quantity)
+        ws.write(i, 5, total_price)
+
+        sum_quantity += total_quantity
+        sum_price += total_price
+
+    i += 1
+    ws.write(i, 3, u'正常总计', style_blue)
+    ws.write(i, 4, sum_quantity, style_blue)
+    ws.write(i, 5, sum_price, style_blue)
+
+    j = 5
+    for t in t_list:
+        j += 1
+        sub_quantity = 0
+        for product in product_list:
+            quantity = product_t_quantity.get((product.id, t), 0)
+            sub_quantity += quantity
+        ws.write(i, j, sub_quantity, style_blue)
+
+    ws.write_merge(1, i-1, 0, 0, u'正常品种')
+
+    # 特价
+    i += 1
+
+    ws.write(i, 1, u'标记')
+    ws.write(i, 2, u'品种')
+    ws.write(i, 3, u'单价')
+    ws.write(i, 4, u'数量')
+    ws.write(i, 5, u'小计金额')
+
+    j = 5
+    for t in t_list:
+        j += 1
+        ws.write(i, j, t)
+
+    special_start_row = i + 1
+    special_sum_quantity = 0
+    special_sum_price = 0
+    for product in special_product_list:
+        i += 1
+        ws.write(i, 1, product.extra)
+        ws.write(i, 2, product.name)
+
+        price = product.current_price
+        total_quantity = 0
+        total_price = 0
+        j = 5
+        for t in t_list:
+            price = special_product_t_price.get((product.id, t), product.current_price)
+            quantity = special_product_t_quantity.get((product.id, t), 0)
+            total_quantity += quantity
+            total_price += quantity * price
+            j += 1
+            if quantity:
+                ws.write(i, j, quantity)
+
+        ws.write(i, 3, price)
+        ws.write(i, 4, total_quantity)
+        ws.write(i, 5, total_price)
+
+        special_sum_quantity += total_quantity
+        special_sum_price += total_price
+
+    i += 1
+    ws.write(i, 3, u'特价总计', style_orange)
+    ws.write(i, 4, special_sum_quantity, style_orange)
+    ws.write(i, 5, special_sum_price, style_orange)
+
+    j = 5
+    for t in t_list:
+        j += 1
+        sub_quantity = 0
+        for product in special_product_list:
+            quantity = special_product_t_quantity.get((product.id, t), 0)
+            sub_quantity += quantity
+        ws.write(i, j, sub_quantity, style_orange)
+
+    ws.write_merge(special_start_row, i - 1, 0, 0, u'特价品种')
+
+    i += 1
+    ws.write(i, 3, u'合计', style_red)
+    ws.write(i, 4, sum_quantity + special_sum_quantity, style_red)
+    ws.write(i, 5, sum_price + special_sum_price, style_red)
 
     # ----------- month ------------
-    ws = w.add_sheet('month')
 
-    ws.write(0, 0, u'序号')
-    ws.write(0, 1, u'标记')
-    ws.write(0, 2, u'品种')
-    ws.write(0, 3, u'月出货量')
-    ws.write(0, 4, u'每份价格')
-    ws.write(0, 5, u'小计金额')
+    sheet_name = u'%d年%d月' % (now.year, now.month)
+    ws = w.add_sheet(sheet_name)
 
     sales = Sale.objects.filter(create_time__gte=month_begin, create_time__lte=month_end).order_by('create_time')
 
-    write_report(ws, sales, '%m-%d')
+    time_flag = '%m-%d'
+
+    product_t_price = {}
+    product_t_quantity = {}
+    special_product_t_price = {}
+    special_product_t_quantity = {}
+    t_list = []
+    product_list = []
+    special_product_list = []
+    for sale in sales:
+        product = sale.product
+        t = sale.create_time.strftime(time_flag)
+        if t not in t_list:
+            t_list.append(t)
+
+        if sale.is_special:
+            if product not in special_product_list:
+                special_product_list.append(product)
+            special_product_t_price[(product.id, t)] = sale.price
+            special_product_t_quantity[(product.id, t)] = special_product_t_quantity.get((product.id, t), 0) + int(sale.quantity)
+        else:
+            if product not in product_list:
+                product_list.append(product)
+            product_t_price[(product.id, t)] = sale.price
+            product_t_quantity[(product.id, t)] = product_t_quantity.get((product.id, t), 0) + int(sale.quantity)
+
+    for product in all_products:
+        if product not in product_list + special_product_list:
+            product_list.append(product)
+
+    i = 0
+
+    ws.write_merge(i, i + 1, 1, 1, u'标记')
+    ws.write_merge(i, i + 1, 2, 2, u'品种')
+    ws.write_merge(i, i + 1, 3, 3, u'小计数量')
+    ws.write_merge(i, i + 1, 4, 4, u'小计金额')
+
+    j = 4
+    for t in t_list:
+        j += 1
+        ws.write_merge(i, i, j, j + 2, t)
+        ws.write(i + 1, j, u'单价')
+        ws.write(i + 1, j + 1, u'数量')
+        ws.write(i + 1, j + 2, u'金额')
+        j += 2
+    i += 1
+
+    sum_quantity = 0
+    sum_price = 0
+    for product in product_list:
+        i += 1
+        ws.write(i, 1, product.extra)
+        ws.write(i, 2, product.name)
+
+        total_quantity = 0
+        total_price = 0
+        j = 4
+        for t in t_list:
+            price = product_t_price.get((product.id, t), product.current_price)
+            quantity = product_t_quantity.get((product.id, t), 0)
+            total_quantity += quantity
+            total_price += quantity * price
+
+            j += 1
+            ws.write(i, j, price)
+
+            j += 1
+            if quantity:
+                ws.write(i, j, quantity)
+
+            j += 1
+            if quantity:
+                ws.write(i, j, quantity * price)
+
+        ws.write(i, 3, total_quantity)
+        ws.write(i, 4, total_price)
+
+        sum_quantity += total_quantity
+        sum_price += total_price
+
+    i += 1
+    ws.write(i, 2, u'正常总计', style_blue)
+    ws.write(i, 3, sum_quantity, style_blue)
+    ws.write(i, 4, sum_price, style_blue)
+
+    j = 4
+    for t in t_list:
+        sub_quantity = 0
+        sub_price = 0
+        for product in product_list:
+            price = product_t_price.get((product.id, t), product.current_price)
+            quantity = product_t_quantity.get((product.id, t), 0)
+            sub_quantity += quantity
+            sub_price += quantity * price
+
+        j += 1
+        ws.write(i, j, '', style_blue)
+
+        j += 1
+        ws.write(i, j, sub_quantity, style_blue)
+
+        j += 1
+        ws.write(i, j, sub_price, style_blue)
+
+    ws.write_merge(1, i - 1, 0, 0, u'正常品种')
+
+    # 特价
+    i += 1
+
+    ws.write_merge(i, i + 1, 1, 1, u'标记')
+    ws.write_merge(i, i + 1, 2, 2, u'品种')
+    ws.write_merge(i, i + 1, 3, 3, u'小计数量')
+    ws.write_merge(i, i + 1, 4, 4, u'小计金额')
+
+    j = 4
+    for t in t_list:
+        j += 1
+        ws.write_merge(i, i, j, j + 2, t)
+        ws.write(i + 1, j, u'单价')
+        ws.write(i + 1, j + 1, u'数量')
+        ws.write(i + 1, j + 2, u'金额')
+        j += 2
+    i += 1
+
+    special_start_row = i + 1
+    special_sum_quantity = 0
+    special_sum_price = 0
+    for product in special_product_list:
+        i += 1
+        ws.write(i, 1, product.extra)
+        ws.write(i, 2, product.name)
+
+        total_quantity = 0
+        total_price = 0
+        j = 4
+        for t in t_list:
+            price = special_product_t_price.get((product.id, t), product.current_price)
+            quantity = special_product_t_quantity.get((product.id, t), 0)
+            total_quantity += quantity
+            total_price += quantity * price
+
+            j += 1
+            ws.write(i, j, price)
+
+            j += 1
+            if quantity:
+                ws.write(i, j, quantity)
+
+            j += 1
+            if quantity:
+                ws.write(i, j, quantity * price)
+
+        ws.write(i, 3, total_quantity)
+        ws.write(i, 4, total_price)
+
+        special_sum_quantity += total_quantity
+        special_sum_price += total_price
+
+    i += 1
+    ws.write(i, 2, u'特价总计', style_orange)
+    ws.write(i, 3, special_sum_quantity, style_orange)
+    ws.write(i, 4, special_sum_price, style_orange)
+
+    j = 4
+    for t in t_list:
+        sub_quantity = 0
+        sub_price = 0
+        for product in special_product_list:
+            price = special_product_t_price.get((product.id, t), product.current_price)
+            quantity = special_product_t_quantity.get((product.id, t), 0)
+            sub_quantity += quantity
+            sub_price += quantity * price
+
+        j += 1
+        ws.write(i, j, '', style_orange)
+
+        j += 1
+        ws.write(i, j, sub_quantity, style_orange)
+
+        j += 1
+        ws.write(i, j, sub_price, style_orange)
+
+    ws.write_merge(special_start_row, i - 1, 0, 0, u'特价品种')
+
+    i += 1
+    ws.write(i, 2, u'合计', style_red)
+    ws.write(i, 3, sum_quantity + special_sum_quantity, style_red)
+    ws.write(i, 4, sum_price + special_sum_price, style_red)
 
     # ----------- year ------------
-    ws = w.add_sheet('year')
 
-    ws.write(0, 0, u'序号')
-    ws.write(0, 1, u'标记')
-    ws.write(0, 2, u'品种')
-    ws.write(0, 3, u'年出货量')
-    ws.write(0, 4, u'每份价格')
-    ws.write(0, 5, u'小计金额')
+    sheet_name = u'%d年' % now.year
+    ws = w.add_sheet(sheet_name)
 
     sales = Sale.objects.filter(create_time__gte=year_begin, create_time__lte=year_end).order_by('create_time')
 
-    write_report(ws, sales, '%Y-%m')
+    time_flag = '%Y-%m'
+
+    product_t_price = {}
+    product_t_quantity = {}
+    special_product_t_price = {}
+    special_product_t_quantity = {}
+    t_list = []
+    product_list = []
+    special_product_list = []
+    for sale in sales:
+        product = sale.product
+        t = sale.create_time.strftime(time_flag)
+        if t not in t_list:
+            t_list.append(t)
+
+        if sale.is_special:
+            if product not in special_product_list:
+                special_product_list.append(product)
+            special_product_t_price[(product.id, t)] = special_product_t_price.get((product.id, t), 0) + sale.price
+            special_product_t_quantity[(product.id, t)] = special_product_t_quantity.get((product.id, t), 0) + int(sale.quantity)
+        else:
+            if product not in product_list:
+                product_list.append(product)
+            product_t_price[(product.id, t)] = product_t_price.get((product.id, t), 0) + sale.price
+            product_t_quantity[(product.id, t)] = product_t_quantity.get((product.id, t), 0) + int(sale.quantity)
+
+    for product in all_products:
+        if product not in product_list + special_product_list:
+            product_list.append(product)
+
+    i = 0
+
+    ws.write_merge(i, i + 1, 1, 1, u'标记')
+    ws.write_merge(i, i + 1, 2, 2, u'品种')
+    ws.write_merge(i, i + 1, 3, 3, u'小计数量')
+    ws.write_merge(i, i + 1, 4, 4, u'小计金额')
+
+    j = 4
+    for t in t_list:
+        j += 1
+        ws.write_merge(i, i, j, j + 1, t)
+        ws.write(i + 1, j, u'数量')
+        ws.write(i + 1, j + 1, u'金额')
+        j += 1
+    i += 1
+
+    sum_quantity = 0
+    sum_price = 0
+    for product in product_list:
+        i += 1
+        ws.write(i, 1, product.extra)
+        ws.write(i, 2, product.name)
+
+        total_quantity = 0
+        total_price = 0
+        j = 4
+        for t in t_list:
+            price = product_t_price.get((product.id, t), 0)
+            quantity = product_t_quantity.get((product.id, t), 0)
+            total_quantity += quantity
+            total_price += price
+
+            j += 1
+            if quantity:
+                ws.write(i, j, quantity)
+
+            j += 1
+            if quantity:
+                ws.write(i, j, price)
+
+        ws.write(i, 3, total_quantity)
+        ws.write(i, 4, total_price)
+
+        sum_quantity += total_quantity
+        sum_price += total_price
+
+    i += 1
+    ws.write(i, 2, u'正常总计', style_blue)
+    ws.write(i, 3, sum_quantity, style_blue)
+    ws.write(i, 4, sum_price, style_blue)
+
+    j = 4
+    for t in t_list:
+        sub_quantity = 0
+        sub_price = 0
+        for product in product_list:
+            price = product_t_price.get((product.id, t), 0)
+            quantity = product_t_quantity.get((product.id, t), 0)
+            sub_quantity += quantity
+            sub_price += price
+
+        j += 1
+        ws.write(i, j, sub_quantity, style_blue)
+
+        j += 1
+        ws.write(i, j, sub_price, style_blue)
+
+    ws.write_merge(1, i - 1, 0, 0, u'正常品种')
+
+    # 特价
+    i += 1
+
+    ws.write_merge(i, i + 1, 1, 1, u'标记')
+    ws.write_merge(i, i + 1, 2, 2, u'品种')
+    ws.write_merge(i, i + 1, 3, 3, u'小计数量')
+    ws.write_merge(i, i + 1, 4, 4, u'小计金额')
+
+    j = 4
+    for t in t_list:
+        j += 1
+        ws.write_merge(i, i, j, j + 1, t)
+        ws.write(i + 1, j, u'数量')
+        ws.write(i + 1, j + 1, u'金额')
+        j += 1
+    i += 1
+
+    special_start_row = i + 1
+    special_sum_quantity = 0
+    special_sum_price = 0
+    for product in special_product_list:
+        i += 1
+        ws.write(i, 1, product.extra)
+        ws.write(i, 2, product.name)
+
+        total_quantity = 0
+        total_price = 0
+        j = 4
+        for t in t_list:
+            price = special_product_t_price.get((product.id, t), 0)
+            quantity = special_product_t_quantity.get((product.id, t), 0)
+            total_quantity += quantity
+            total_price += price
+
+            j += 1
+            if quantity:
+                ws.write(i, j, quantity)
+
+            j += 1
+            if quantity:
+                ws.write(i, j, price)
+
+        ws.write(i, 3, total_quantity)
+        ws.write(i, 4, total_price)
+
+        special_sum_quantity += total_quantity
+        special_sum_price += total_price
+
+    i += 1
+    ws.write(i, 2, u'特价总计', style_orange)
+    ws.write(i, 3, special_sum_quantity, style_orange)
+    ws.write(i, 4, special_sum_price, style_orange)
+
+    j = 4
+    for t in t_list:
+        sub_quantity = 0
+        sub_price = 0
+        for product in special_product_list:
+            price = special_product_t_price.get((product.id, t), 0)
+            quantity = special_product_t_quantity.get((product.id, t), 0)
+            sub_quantity += quantity
+            sub_price += price
+
+        j += 1
+        ws.write(i, j, sub_quantity, style_orange)
+
+        j += 1
+        ws.write(i, j, sub_price, style_orange)
+
+    ws.write_merge(special_start_row, i - 1, 0, 0, u'特价品种')
+
+    i += 1
+    ws.write(i, 2, u'合计', style_red)
+    ws.write(i, 3, sum_quantity + special_sum_quantity, style_red)
+    ws.write(i, 4, sum_price + special_sum_price, style_red)
+
+
 
     # -----------------------------
 
@@ -395,7 +915,7 @@ def password_reset(request):
 
 
 def write_report(ws, sales, time_flag='%H:%M'):
-    product_t_dict = {}
+    product_t_quantity = {}
     product_list = []
     t_list = []
     for sale in sales:
@@ -405,7 +925,7 @@ def write_report(ws, sales, time_flag='%H:%M'):
             product_list.append(product)
         if t not in t_list:
             t_list.append(t)
-        product_t_dict[(product.id, t)] = product_t_dict.get((product.id, t), 0) + int(sale.quantity)
+        product_t_quantity[(product.id, t)] = product_t_quantity.get((product.id, t), 0) + int(sale.quantity)
 
     j = 5
     for t in t_list:
@@ -426,7 +946,7 @@ def write_report(ws, sales, time_flag='%H:%M'):
         total_price = 0
         j = 5
         for t in t_list:
-            quantity = product_t_dict.get((product.id, t), 0)
+            quantity = product_t_quantity.get((product.id, t), 0)
             total_quantity += quantity
             total_price += quantity * price
             j += 1
@@ -449,7 +969,7 @@ def write_report(ws, sales, time_flag='%H:%M'):
         j += 1
         sub_quantity = 0
         for product in product_list:
-            quantity = product_t_dict.get((product.id, t), 0)
+            quantity = product_t_quantity.get((product.id, t), 0)
             sub_quantity += quantity
         ws.write(i, j, sub_quantity)
 

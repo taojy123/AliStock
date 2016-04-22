@@ -8,12 +8,14 @@
             <tr>
                 <th data-sortable="true">产品编号</th>
                 <th data-sortable="true">名称</th>
-                <th data-sortable="true">颜色</th>
-                <th data-sortable="true">尺寸</th>
-                <th data-sortable="true">款式</th>
-                <th data-sortable="true">网页地址</th>
+{#                <th data-sortable="true">颜色</th>#}
+{#                <th data-sortable="true">尺寸</th>#}
+{#                <th data-sortable="true">款式</th>#}
+{#                <th data-sortable="true">网页地址</th>#}
                 <th data-sortable="true">单价</th>
-                <th data-sortable="true">当前库存</th>
+                <th data-sortable="true">特价</th>
+{#                <th data-sortable="true">当前库存</th>#}
+                <th data-sortable="true">售出数量</th>
                 <th data-sortable="true">标记</th>
                 <th data-sortable="true">最后更新时间</th>
                 <th>操作</th>
@@ -24,14 +26,20 @@
                 <tr >
                     <td>{{ r.pid }}</td>
                     <td>{{ r.name }}</td>
-                    <td>{{ r.color }}</td>
-                    <td>{{ r.size }}</td>
-                    <td>{{ r.pattern }}</td>
-                    <td>{{ r.url }}</td>
+{#                    <td>{{ r.color }}</td>#}
+{#                    <td>{{ r.size }}</td>#}
+{#                    <td>{{ r.pattern }}</td>#}
+{#                    <td>{{ r.url }}</td>#}
                     <td>{{ r.price }}</td>
                     <td>
-                        <span {% if r.stock < 20 %}style="color: red"{% endif %}>{{ r.stock }}</span>
+                        {% if r.special > 0 %}
+                            <span style="color: red">{{ r.special }}</span>
+                        {% endif %}
                     </td>
+{#                    <td>#}
+{#                        <span {% if r.stock < 20 %}style="color: red"{% endif %}>{{ r.stock }}</span>#}
+{#                    </td>#}
+                    <td>{{ r.sale_quantity }}</td>
                     <td>{{ r.extra }}</td>
                     <td>{{ r.update_time|date:"Y-m-d H:i:s" }}</td>
                     <td>
@@ -46,6 +54,7 @@
                                data-pattern="{{ r.pattern }}"
                                data-url="{{ r.url }}"
                                data-price="{{ r.price }}"
+                               data-special="{{ r.special }}"
                                data-extra="{{ r.extra }}"
                                href="#modify" >修改</a>
                         {% endif %}
@@ -92,6 +101,11 @@
             <div class="form-group">
                 <label  class="col-sm-2 control-label" >单价:</label>
                 <input type="text" class="form-control"  style="display:inline;width:auto;" name="price" >
+            </div>
+
+            <div class="form-group">
+                <label  class="col-sm-2 control-label" >特价:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="special" >
             </div>
 
             <div class="form-group">
@@ -154,6 +168,11 @@
             </div>
 
             <div class="form-group">
+                <label  class="col-sm-2 control-label" >特价:</label>
+                <input type="text" class="form-control"  style="display:inline;width:auto;" name="special" >
+            </div>
+
+            <div class="form-group">
                 <label  class="col-sm-2 control-label" >标记:</label>
                 <input type="text" class="form-control"  style="display:inline;width:auto;" name="extra" >
             </div>
@@ -191,6 +210,7 @@
             $("#modify [name='pattern']").val($(this).attr("data-pattern"));
             $("#modify [name='url']").val($(this).attr("data-url"));
             $("#modify [name='price']").val($(this).attr("data-price"));
+            $("#modify [name='special']").val($(this).attr("data-special"));
             $("#modify [name='extra']").val($(this).attr("data-extra"));
         });
 

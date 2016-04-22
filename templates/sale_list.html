@@ -25,6 +25,8 @@
                     <td>
                         {% if request.user.is_staff or r.is_today %}
                             <a class="btn btn-xs btn-danger" href="/sale/del/{{ r.id }}/" onclick="return confirm('确定要删除吗?')">删除</a>
+                        {% endif %}
+                        {% if request.user.is_staff %}
                             <a class="btn btn-xs btn-primary modify_btn"
                                data-id="{{ r.id }}"
                                data-product_id="{{ r.product_id }}"

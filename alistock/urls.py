@@ -4,7 +4,8 @@ from views import *
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
-urlpatterns = patterns('',
+urlpatterns = patterns(
+    '',
     ('^$', index),
     ('^index/$', index),
 
@@ -26,8 +27,8 @@ urlpatterns = patterns('',
     ('^sale/update/$', sale_update),
 
     ('^quick_input/$', quick_input),
+    ('^quick_delete/$', quick_delete),
     ('^report/$', report),
-
 
     ('^loginpage/$', loginpage),
     ('^login/$', login),
