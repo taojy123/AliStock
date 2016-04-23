@@ -135,14 +135,14 @@
             $("#form").fadeToggle();
         });
 
-        $(".modify_btn").click(function(){
-            $("#modify").fadeIn()
+        $(document).delegate(".modify_btn", 'click', function(){
+            $("#modify").fadeIn();
             $("#modify [name='id']").val($(this).attr("data-id"));
             $("#modify [name='product_id']").val($(this).attr("data-product_id"));
             $("#modify [name='quantity']").val($(this).attr("data-quantity"));
             $("#modify [name='price']").val($(this).attr("data-price"));
             $("#modify [name='comment']").val($(this).attr("data-comment"));
-        });
+        })
 
     </script>
 {% endblock %}

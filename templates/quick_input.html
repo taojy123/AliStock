@@ -9,7 +9,7 @@
 
         <div class="form-group">
             <input type="text" class="form-control" name="data" id="data" style="display:inline;width:auto;" placeholder="商品标记" autocomplete="off">
-            <button type="submit" class="btn btn-success" >提交</button>
+            <a href="/quick_delete/" class="btn btn-danger" id="quick_delete" style="display: none;">删除当前误输入</a>
         </div>
 
     </form>
@@ -17,7 +17,6 @@
     <div id="log"></div>
 
     <a href="/report/" class="btn btn-primary">生成报表</a>
-    <a href="/quick_delete/" class="btn btn-danger" id="quick_delete" style="display: none;">删除当前误输入</a>
 
     <script>
 
@@ -29,13 +28,13 @@
                 if(!data){
                     return false
                 }
+                $("#data").val("");
                 $.ajax({
                     url: "/quick_input/",
                     type: "POST",
                     data: {"data": data},
                     success: function(r){
                         $("#log").prepend($("<p>" + r + "</p>"));
-                        $("#data").val("");
                         $("#quick_delete").show();
                     }
                 });
@@ -45,6 +44,11 @@
             $("#data").keypress(function(event){
                 if(event.charCode==32){
                     $("#form").submit();
+                    return;
+                }
+                if($($("#data").val())){
+                    $("#form").submit();
+                    return;
                 }
             })
         })
