@@ -200,7 +200,7 @@
             $("#form").fadeToggle();
         });
 
-        $(".modify_btn").click(function(){
+        $(document).delegate(".modify_btn", 'click', function(){
             $("#modify").fadeIn()
             $("#modify [name='id']").val($(this).attr("data-id"));
             $("#modify [name='pid']").val($(this).attr("data-pid"));
