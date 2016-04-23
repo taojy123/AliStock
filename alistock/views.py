@@ -247,9 +247,9 @@ def quick_input(request):
         sale.price = product.current_price
 
         if product.special > 0:
-            sale.comment = u'[特价]快速录入(%s)' % client_ip
+            sale.comment = u'<span style="color: red">[特价]</span>快速录入(%s)' % client_ip
             sale.is_special = True
-            result = u'[特价]1份 %s , 录入成功' % product.name
+            result = u'<span style="color: red">[特价]</span>1份 %s , 录入成功' % product.name
         else:
             sale.comment = u'快速录入(%s)' % client_ip
             sale.is_special = False
