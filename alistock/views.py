@@ -268,7 +268,7 @@ def quick_delete(request):
     if (now - sale.create_time).seconds < 600:
         # 只能删除最近10分钟产生的记录
         sale.delete()
-        return HttpResponseRedirect('/quick_input/')
+        return HttpResponseRedirect('/quick_input/#username')
     return HttpResponse(u'删除失败,只能删除最近10分钟产生的记录,请联系管理员.<a href="/">返回首页</a>')
 
 

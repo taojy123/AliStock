@@ -3,7 +3,7 @@
 {% block content %}
     <h2 class="sub-header">快速录入</h2>
 
-    <h5>当前操作员 {{ request.user.username }}</h5>
+    <h5 id="username">当前操作员 {{ request.user.username }}</h5>
 
     <form action="/purchase/update/" method="POST" class="form-horizontal" id="form">
 
