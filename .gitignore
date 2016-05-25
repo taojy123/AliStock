@@ -61,3 +61,5 @@ target/
 #Ipython Notebook
 .ipynb_checkpoints
 data.db
+.idea/codeStyleSettings.xml
+static/files/2016-04-22.xls
